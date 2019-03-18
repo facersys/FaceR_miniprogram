@@ -1,7 +1,6 @@
 import Taro, { Component, Config } from '@tarojs/taro'
 import { View, Text } from '@tarojs/components'
 import { AtButton } from 'taro-ui'
-import { set as setGlobalData } from '../../global'
 
 import './index.less'
 
@@ -20,12 +19,7 @@ export default class Login extends Component {
 
   // 用户直接退出页面
   componentWillUnmount() {
-    var user = {}
-    Taro.getStorage({ key: 'user' }).then(res => {
-      user = res.data
-      console.log(user)
-      console.log(Boolean(user))
-    }).catch(() => {
+    Taro.getStorage({ key: 'userId' }).catch(() => {
       Taro.navigateTo({
         url: '/pages/login/index'
       })
@@ -33,11 +27,68 @@ export default class Login extends Component {
   }
 
   getUserInfo = (userinfo) => {
-    console.log('userinfo', userinfo)
+
     if (userinfo.detail.userInfo) {
-      setGlobalData('user', userinfo.detail.userInfo)
-      Taro.setStorage({key: 'user', data: userinfo.detail.userInfo}).then(rst => {
-        Taro.navigateBack()
+      Taro.login().then((res) => {
+        Taro.request({
+          url: 'https://facer.yingjoy.cn/api/wx/code2session/' + res.code,
+          success(res) {
+            // 拿到session_key
+            console.log(res)
+            const session_key = res.data.data.session_key
+
+            Taro.request({
+              url: 'https://facer.yingjoy.cn/api/wx/decrypt',
+              method: 'POST',
+              data: {
+                'session_key': session_key,
+                'encryptedData': userinfo.detail.encryptedData,
+                'iv': userinfo.detail.iv
+              },
+              success(res) {
+                const userinfo_detail = res.data.data
+                console.log(userinfo_detail)
+
+                // 用户是否存在
+                Taro.request({
+                  url: 'https://facer.yingjoy.cn/api/user',
+                  data: {
+                    'oid': userinfo_detail.openId
+                  },
+                  success(res) {
+                    if (res.data.data !== null) {
+                      // 用户存在
+                      Taro.setStorage({ key: 'userId', data: userinfo_detail.openId }).then(res => {
+                        Taro.navigateBack()
+                      })
+                    } else {
+                      // 用户->数据库
+                      Taro.request({
+                        url: 'https://facer.yingjoy.cn/api/user',
+                        method: 'POST',
+                        data: {
+                          city: userinfo_detail.city,
+                          province: userinfo_detail.province,
+                          avatar: userinfo_detail.avatarUrl,
+                          gender: userinfo_detail.gender,
+                          name: userinfo_detail.nickName,
+                          openid: userinfo_detail.openId,
+                          unionid: userinfo_detail.unionId
+                        },
+                        success(res) {
+                          Taro.setStorage({ key: 'userId', data: userinfo_detail.openId }).then(res => {
+                            Taro.navigateBack()
+                          })
+                        }
+                      })
+                    }
+                  }
+                })
+
+              }
+            })
+          }
+        })
       })
     } else { }
   }
@@ -53,9 +104,9 @@ export default class Login extends Component {
               openType='getUserInfo'
               onGetUserInfo={this.getUserInfo}
             >微信登陆</AtButton>
-            <AtButton type='secondary' className='login-btn'>学号登陆</AtButton>
+            {/* <AtButton type='secondary' className='login-btn'>学号登陆</AtButton> */}
           </View>
-          <Text className='login-notice'>注: 使用学号登陆时，初始密码: 8888</Text>
+          <Text className='login-notice'>注: 登陆后可以在信息采集中绑定教务系统</Text>
         </View>
         <BottomNavbar />
       </View>

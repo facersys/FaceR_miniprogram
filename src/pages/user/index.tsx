@@ -1,28 +1,67 @@
 import Taro, { Component, Config } from '@tarojs/taro'
 import { View, Text, Image } from '@tarojs/components'
-import { AtList, AtListItem } from "taro-ui"
+import { AtList, AtListItem, AtModal } from "taro-ui"
 
-import { set as setGlobalData, get as getGlobalData } from '../../global'
 
 import './index.less'
 
 import BottomNavbar from '../../components/navbar'
 
 export default class User extends Component {
+  constructor(props) {
+    super(props)
+
+    this.deleteAccount = this.deleteAccount.bind(this)
+  }
+
   config: Config = {
     navigationBarTitleText: '个人中心'
   }
 
   // 是否登陆
   componentWillMount() {
-    var user = {}
-    Taro.getStorage({ key: 'user' }).then(res => {
-      user = res.data
-      console.log(user)
-      console.log(Boolean(user))
+    var self = this
+    Taro.getStorage({ key: 'userId' }).then(res => {
+      // 获取用户信息
+      Taro.request({
+        url: "https://facer.yingjoy.cn/api/user",
+        data: {
+          'oid': res.data,
+        },
+        success(res) {
+          const userinfo = res.data.data
+          self.setState({ user: userinfo })
+        }
+      })
     }).catch(() => {
-      Taro.navigateTo({
+      Taro.navigateTo({ 
         url: '/pages/login/index'
+      })
+    })
+  }
+
+  // 注销账户
+  deleteAccount = () => {
+    var self = this
+    Taro.getStorage({ key: 'userId' }).then(res => {
+      // 获取用户信息
+      Taro.request({
+        url: "https://facer.yingjoy.cn/api/user",
+        method: 'DELETE',
+        data: {
+          'oid': res.data,
+        },
+        success(res) {
+          Taro.showModal({
+            title: '账户注销',
+            content: '账户注销成功！',
+            showCancel: false
+          })
+          // Taro.clearStorage()
+          // Taro.navigateTo({
+          //   url: '/pages/login/index'
+          // })
+        }
       })
     })
   }
@@ -33,11 +72,11 @@ export default class User extends Component {
         <View className='user-info-simple'>
           <Image
             className='user-avatar'
-            src='https://facer.yingjoy.cn/static/logo2.png'
+            src={this.state.user.avatar}
           />
           <Text
             className='user-name'
-          >Ying Joy</Text>
+          >{this.state.user.name}</Text>
         </View>
         <View className='list'>
           <AtList>
@@ -54,11 +93,13 @@ export default class User extends Component {
             <AtListItem
               title='注销账户'
               arrow='right'
+              onClick={this.deleteAccount}
               thumb='http://img12.360buyimg.com/jdphoto/s72x72_jfs/t10660/330/203667368/1672/801735d7/59c85643N31e68303.png'
             />
           </AtList>
         </View>
         <BottomNavbar />
+
       </View>
     )
   }

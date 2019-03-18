@@ -1,6 +1,5 @@
 const globalData = {
   navbar_current: 0,
-  user: {}
 }
 
 export function set(key, val) {

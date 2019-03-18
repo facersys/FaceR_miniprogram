@@ -4,7 +4,6 @@ import Index from './pages/index'
 import './app.less'
 
 import 'taro-ui/dist/style/index.scss'
-import 'taro-ui/dist/style/components/form.scss'
 
 // 如果需要在 h5 环境中开启 React Devtools
 // 取消以下注释：
@@ -21,6 +20,10 @@ class App extends Component {
    * 对于像 navigationBarTextStyle: 'black' 这样的推导出的类型是 string
    * 提示和声明 navigationBarTextStyle: 'black' | 'white' 类型冲突, 需要显示声明类型
    */
+  constructor(props) {
+    super(props)
+  }
+
   config: Config = {
     pages: [
       'pages/index/index',
@@ -36,14 +39,7 @@ class App extends Component {
     }
   }
 
-  componentDidShow() { }
 
-  componentDidHide() { }
-
-  componentDidCatchError() { }
-
-  // 在 App 类中的 render() 函数没有实际作用
-  // 请勿修改此函数
   render() {
     return (
       <Index />
