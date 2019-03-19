@@ -1,10 +1,9 @@
 import Taro, { Component, Config } from '@tarojs/taro'
 import { View, Text, Image } from '@tarojs/components'
-import { AtList, AtListItem, AtModal } from "taro-ui"
-
+import { AtList, AtListItem } from "taro-ui"
 
 import './index.less'
-
+import { getUserInfo } from '../../global'
 import BottomNavbar from '../../components/navbar'
 
 export default class User extends Component {
@@ -20,47 +19,29 @@ export default class User extends Component {
 
   // 是否登陆
   componentWillMount() {
-    var self = this
-    Taro.getStorage({ key: 'userId' }).then(res => {
-      // 获取用户信息
-      Taro.request({
-        url: "https://facer.yingjoy.cn/api/user",
-        data: {
-          'oid': res.data,
-        },
-        success(res) {
-          const userinfo = res.data.data
-          self.setState({ user: userinfo })
-        }
-      })
-    }).catch(() => {
-      Taro.navigateTo({ 
-        url: '/pages/login/index'
-      })
+    getUserInfo().then((res) => {
+      this.setState({ user: res })
     })
   }
 
   // 注销账户
   deleteAccount = () => {
     var self = this
-    Taro.getStorage({ key: 'userId' }).then(res => {
-      // 获取用户信息
+    // 获取用户信息
+    new Promise((resolve, reject) => {
       Taro.request({
-        url: "https://facer.yingjoy.cn/api/user",
+        url: "https://facer.yingjoy.cn/api/user?oid=" + this.state.user.openid,
         method: 'DELETE',
-        data: {
-          'oid': res.data,
-        },
         success(res) {
           Taro.showModal({
             title: '账户注销',
             content: '账户注销成功！',
             showCancel: false
           })
-          // Taro.clearStorage()
-          // Taro.navigateTo({
-          //   url: '/pages/login/index'
-          // })
+          Taro.clearStorage()
+          Taro.navigateTo({
+            url: '/pages/index/index'
+          })
         }
       })
     })

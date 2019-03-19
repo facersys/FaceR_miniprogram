@@ -9,7 +9,7 @@ export default class IndexSwiper extends Component {
 
     this.state = {
       swiperUrls: [
-        "http://iph.href.lu/320x200"
+        "https://facer.yingjoy.cn/static/banner.png"
       ]
     }
   }

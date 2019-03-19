@@ -1,11 +1,12 @@
 import Taro, { Component, Config } from '@tarojs/taro'
-import { View, Picker, Button } from '@tarojs/components'
-import { AtForm, AtInput, AtButton, AtImagePicker, AtModal, AtModalHeader, AtModalContent, AtModalAction } from 'taro-ui'
+import { View, Picker, Button, Text } from '@tarojs/components'
+import { AtForm, AtInput, AtButton, AtModal, AtModalHeader, AtModalContent, AtModalAction, AtImagePicker } from 'taro-ui'
 
 import './index.less'
-
-import StateModal from '../../components/statemodal'
+import { getUserInfo, getGenderStr } from '../../global'
 import BottomNavbar from '../../components/navbar'
+import StateModal from '../../components/statemodal'
+import ImgPicker from '../../components/img_picker'
 
 export default class Collect extends Component {
   config: Config = {
@@ -19,87 +20,84 @@ export default class Collect extends Component {
     this.onReset = this.onReset.bind(this)
 
     this.state = {
-      gender_arr: ['男', '女'],
+      gender_arr: ['保密', '男', '女'],
       grade_arr: [2015, 2016, 2017, 2018],
 
       submitLoading: false,
       jw_modal_visible: false,
       jw_bind_loading: false,
 
-      user: {
-        gender: '男',
-        grader: 2015
-      },
-
-      jw: {
-        u: '',
-        p: ''
-      }
+      user: {},
+      jw: {}
     }
   }
 
   // 是否登陆
   componentWillMount() {
-    var self = this
-    Taro.getStorage({ key: 'userId' }).then(res => {
-      // 获取用户信息
-      Taro.request({
-        url: "https://facer.yingjoy.cn/api/user",
-        data: {
-          'oid': res.data,
-        },
-        success(res) {
-          const userinfo = res.data.data
-          self.setState({ user: userinfo })
-        }
-      })
-    }).catch(() => {
-      Taro.navigateTo({
-        url: '/pages/login/index'
-      })
+    getUserInfo().then((res) => {
+      this.setState({ user: res })
     })
   }
 
   // 绑定教务系统
   bindJW = () => {
     var self = this
-    var data = Object.assign(self.state.user, self.state.jw)
-    console.log(data)
 
-    self.setState({jw_bind_loading: true})
-    Taro.request({
-      url: 'https://facer.yingjoy.cn/api/sync_stbu',
-      method: 'POST',
-      data: data,
-      success(res) {
-        console.log(res)
-        self.setState({jw_bind_loading: false, jw_modal_visible: false})
-      }
+    self.setState({ jw_bind_loading: true })
+    new Promise((resolve, reject) => {
+      Taro.request({
+        url: 'https://facer.yingjoy.cn/api/sync_stbu',
+        method: 'POST',
+        data: Object.assign({}, this.state.jw, { 'oid': this.state.user.openid }),
+        success(res) {
+          self.setState({ jw_bind_loading: false, jw_modal_visible: false })
+          console.log(res)
+          if (res.data.code === 200) {
+            Taro.showToast({
+              title: '同步教务系统成功',
+              icon: 'success',
+              duration: 1500
+            })
+          } else {
+            Taro.showToast({
+              title: res.data.message,
+              icon: 'loading',
+              duration: 1500
+            })
+          }
+        },
+      })
+    }).then(() => {
+      Taro.navigateTo({
+        url: "/pages/collect/index"
+      })
     })
-
   }
 
-  onSubmit = (event) => {
+  onSubmit = () => {
     var self = this
     this.setState({ submitLoading: true })
 
-    Taro.request({
-      url: 'https://facer.yingjoy.cn/api/user?oid=' + self.state.user.openid,
-      method: 'PUT',
-      data: self.state.user,
-      success(res) {
-        console.log(res)
-        self.setState({ submitLoading: false })
-        Taro.showToast({
-          title: '信息更新成功',
-          icon: 'success',
-          duration: 1500
-        })
-      }
+    return new Promise((resolve, reject) => {
+      Taro.request({
+        url: 'https://facer.yingjoy.cn/api/user?oid=' + self.state.user.openid,
+        method: 'PUT',
+        data: self.state.user,
+        success(res) {
+          console.log(res)
+          self.setState({ submitLoading: false })
+          Taro.showToast({
+            title: '信息更新成功',
+            icon: 'success',
+            duration: 1500
+          })
+        }
+      })
     })
+
   }
 
-  onReset(event) {
+  onReset = () => {
     Taro.navigateTo({
       url: '/pages/collect/index'
     })
@@ -151,21 +149,19 @@ export default class Collect extends Component {
               mode='selector'
               range={this.state.gender_arr}
               className='at-input'
-              // value={this.state.gender_arr.indexOf(user.gender)}
+              value={user.gender}
               onChange={(e) => {
-                user.gender = this.state.gender_arr[parseInt(e.target.value)]
-                console.log(user.gender)
+                user.gender = e.target.value
                 this.setState({ user: user })
-              }}
-            >
+              }}>
               <Text className='form-item-label at-input__title at-input__title'>性别</Text>
-              <Text className='gender-selected'>{this.state.user.gender}</Text>
+              <Text className='gender-selected'>{getGenderStr(this.state.user.gender)}</Text>
             </Picker>
 
             <Picker
               mode='selector'
               range={this.state.grade_arr}
-              // value={this.state.grade_arr.indexOf(user.grade)}
+              value={this.state.grade_arr.indexOf(user.grade)}
               onChange={(e) => {
                 user.grade = this.state.grade_arr[parseInt(e.target.value)]
                 this.setState({ user: user })
@@ -213,13 +209,14 @@ export default class Collect extends Component {
             <View className='at-input'>
               <Text className='form-item-label at-input__title at-input__title'>照片</Text>
             </View>
+            <ImgPicker img={user.face_url} />
             <AtImagePicker
-              length={1}
-              className='photo-choice'
+              multiple
               files={this.state.files}
+              onChange={this.onChange.bind(this)}
+              onFail={this.onFail.bind(this)}
               onImageClick={this.onImageClick.bind(this)}
             />
-
           </AtForm>
 
           <View className='form-btn-group'>
@@ -241,6 +238,7 @@ export default class Collect extends Component {
         </View>
         <BottomNavbar />
 
+        {/* 教务登陆模态框 */}
         <AtModal isOpened={this.state.jw_modal_visible}>
           <AtModalHeader>教务系统</AtModalHeader>
           <AtModalContent>
@@ -266,8 +264,8 @@ export default class Collect extends Component {
             />
           </AtModalContent>
           <AtModalAction>
-            <Button onClick={()=>{
-              this.setState({jw_bind_loading: false, jw_modal_visible: false})
+            <Button onClick={() => {
+              this.setState({ jw_bind_loading: false, jw_modal_visible: false })
             }}>取消</Button>
             <Button loading={this.state.jw_bind_loading} onClick={this.bindJW}>绑定</Button>
           </AtModalAction>
