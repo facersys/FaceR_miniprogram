@@ -18,6 +18,7 @@ export default class Collect extends Component {
 
     this.onSubmit = this.onSubmit.bind(this)
     this.onReset = this.onReset.bind(this)
+    this.changeState = this.changeState.bind(this)
 
     this.state = {
       gender_arr: ['保密', '男', '女'],
@@ -37,6 +38,10 @@ export default class Collect extends Component {
     getUserInfo().then((res) => {
       this.setState({ user: res })
     })
+  }
+
+  changeState(stateName) {
+    this.setState(stateName)
   }
 
   // 绑定教务系统
@@ -209,14 +214,8 @@ export default class Collect extends Component {
             <View className='at-input'>
               <Text className='form-item-label at-input__title at-input__title'>照片</Text>
             </View>
-            <ImgPicker img={user.face_url} />
-            <AtImagePicker
-              multiple
-              files={this.state.files}
-              onChange={this.onChange.bind(this)}
-              onFail={this.onFail.bind(this)}
-              onImageClick={this.onImageClick.bind(this)}
-            />
+
+            <ImgPicker img={user.face_url} changeState={this.changeState} />
           </AtForm>
 
           <View className='form-btn-group'>
