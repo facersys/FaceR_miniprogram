@@ -64,6 +64,11 @@ export default class User extends Component {
             <AtListItem
               title='我的信息'
               arrow='right'
+              onClick={() => {
+                Taro.navigateTo({
+                  url: '/pages/collect/index'
+                })
+              }}
               thumb='https://img12.360buyimg.com/jdphoto/s72x72_jfs/t6160/14/2008729947/2754/7d512a86/595c3aeeNa89ddf71.png'
             />
             <AtListItem

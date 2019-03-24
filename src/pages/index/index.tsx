@@ -4,6 +4,7 @@ import './index.less'
 
 import IndexSwiper from '../../components/swiper'
 import BottomNavbar from '../../components/navbar'
+import IndexCard from '../../components/index_card'
 
 export default class Index extends Component {
 
@@ -32,6 +33,11 @@ export default class Index extends Component {
     return (
       <View className='index'>
         <IndexSwiper />
+          <View className='index-card-group'>
+            <IndexCard title='人脸识别' />
+            <IndexCard title='考勤记录' />
+            <IndexCard title='分享应用' />
+          </View>
         <BottomNavbar />
       </View>
     )

@@ -99,8 +99,7 @@ export default class Login extends Component {
                         if (res.statusCode === 500) {
                           // 解密失败，重新解密
                           Taro.showToast({
-                            title: '登陆失败，请重新登陆',
-                            icon: 'loading'
+                            title: '请重试'
                           })
                         } else {
                           const userinfo_detail = res.data.data
