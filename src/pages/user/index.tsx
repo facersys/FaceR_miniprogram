@@ -28,22 +28,30 @@ export default class User extends Component {
   deleteAccount = () => {
     var self = this
     // 获取用户信息
-    new Promise((resolve, reject) => {
-      Taro.request({
-        url: "https://facer.yingjoy.cn/api/user?oid=" + this.state.user.openid,
-        method: 'DELETE',
-        success(res) {
-          Taro.showModal({
-            title: '账户注销',
-            content: '账户注销成功！',
-            showCancel: false
-          })
-          Taro.clearStorage()
-          Taro.navigateTo({
-            url: '/pages/index/index'
+    Taro.showModal({
+      title: '是否要注销账号',
+      content: '注销账号后您的所有资料均会被删除！',
+      success: function (res) {
+        if (res.confirm) {
+          new Promise((resolve, reject) => {
+            Taro.request({
+              url: "https://facer.yingjoy.cn/api/user?oid=" + self.state.user.openid,
+              method: 'DELETE',
+              success(res) {
+                Taro.showModal({
+                  title: '账户注销',
+                  content: '账户注销成功！',
+                  showCancel: false
+                })
+                Taro.clearStorage()
+                Taro.navigateTo({
+                  url: '/pages/index/index'
+                })
+              }
+            })
           })
         }
-      })
+      }
     })
   }
 

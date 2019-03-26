@@ -29,7 +29,8 @@ class App extends Component {
       'pages/index/index',
       'pages/collect/index',
       'pages/user/index',
-      'pages/login/index'
+      'pages/login/index',
+      'pages/face_decetion/index'
     ],
     window: {
       backgroundTextStyle: 'light',

@@ -28,7 +28,7 @@
 			"list": []
 		},
 		"miniprogram": {
-			"current": 2,
+			"current": 3,
 			"list": [
 				{
 					"id": 0,
@@ -48,6 +48,13 @@
 					"id": -1,
 					"name": "信息采集",
 					"pathName": "pages/collect/index",
+					"query": "",
+					"scene": null
+				},
+				{
+					"id": 3,
+					"name": "face_decetion",
+					"pathName": "pages/face_decetion/index",
 					"query": "",
 					"scene": null
 				}

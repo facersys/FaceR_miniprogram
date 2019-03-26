@@ -76,7 +76,6 @@ export default class Login extends Component {
                 if (res) {
                   console.log('用户已存在')
                   Taro.setStorage({ key: 'userId', data: openid }).then(res => {
-                    console.log(Taro.getCurrentPages())
                     Taro.navigateTo({
                       url: "/" + Taro.getCurrentPages()[0].route
                     })

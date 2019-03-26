@@ -13,7 +13,7 @@ export default class IndexCard extends Component {
 
   render() {
     return (
-      <View className='index-card-item-view'>
+      <View className='index-card-item-view' onClick={this.props.onClick}>
         <View className='index-card-item'>{this.props.title}</View>
       </View>
     )

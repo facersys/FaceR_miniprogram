@@ -1,28 +1,32 @@
-import Taro, { Component } from '@tarojs/taro'
-import { View, Image } from '@tarojs/components'
-import { AtIcon } from 'taro-ui'
+import Taro, { Component, Config } from '@tarojs/taro'
+import { View } from '@tarojs/components'
+import { AtButton } from 'taro-ui'
+import { getUserInfo } from '../../global'
 
 import './index.less'
-import { get as getGlobalData } from '../../global'
 
-export default class ImgPicker extends Component {
+import BigImg from '../../components/big_img'
+import BottomNavbar from '../../components/navbar'
 
-  static defaultProps = {user: {}}
+export default class Login extends Component {
+  config: Config = {
+    navigationBarTitleText: '人脸检测'
+  }
 
   constructor(props) {
     super(props)
 
-    this.handleImgPicker = this.handleImgPicker.bind(this)
-    this.changeState = this.changeState.bind(this)
+    this.choiceFile = this.choiceFile.bind(this)
   }
 
-  changeState(item) {
-    this.props.onChangeState(item)
+  // 是否登陆
+  componentWillMount() {
+    getUserInfo().then((res) => {
+      this.setState({ user: res })
+    })
   }
 
-  handleImgPicker = () => {
-    var self = this
-    
+  choiceFile = () => {
     new Promise(() => {
       Taro.chooseImage({
         count: 1,
@@ -75,22 +79,9 @@ export default class ImgPicker extends Component {
 
   render() {
     return (
-      <View className='img-picker'>
-        <View
-          className='face-img-view'
-          onClick={this.handleImgPicker}
-        >
-          {
-            this.props.user.face_url ? (
-              <Image
-                src={getGlobalData('OSS_URL') + this.props.user.face_url}
-                className='face-img'
-              />
-            ) : (
-                <AtIcon customStyle="font-size: 48px;color: #b3b3b3;display: flex;justify-content: center;align-items: center;height: 100%;" size='48' value='add' color='#b3b3b3'></AtIcon>
-              )
-          }
-        </View>
+      <View className='collect'>
+        <BigImg user={this.state.user} img={""} />
+        <AtButton plain type='primary' onClick={this.choiceFile}>选择文件上传</AtButton>
       </View>
     )
   }
