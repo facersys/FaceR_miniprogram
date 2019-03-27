@@ -14,6 +14,8 @@ export default class Index extends Component {
 
     this.collectInfo = this.collectInfo.bind(this)
     this.deleteAccount = this.deleteAccount.bind(this)
+    this.toFD = this.toFD.bind(this)
+    this.toFR = this.toFR.bind(this)
   }
 
   componentWillMount() {
@@ -21,6 +23,19 @@ export default class Index extends Component {
       this.setState({ user: res })
     })
   }
+
+  toFD = () => {
+    Taro.navigateTo({
+      url: '/pages/fd/index'
+    })
+  }
+
+  toFR = () => {
+    Taro.navigateTo({
+      url: '/pages/fr/index'
+    })
+  }
+
 
   // 注销账户
   deleteAccount = () => {
@@ -89,8 +104,8 @@ export default class Index extends Component {
 
         <View className='index-card-group'>
           <IndexCard title='信息录入' onClick={this.collectInfo} />
-          <IndexCard title='人脸检测' />
-          <IndexCard title='人脸识别' />
+          <IndexCard title='人脸检测' onClick={this.toFD} />
+          <IndexCard title='人脸识别' onClick={this.toFR} />
           <IndexCard title='考勤记录' />
           <IndexCard title='我的通知' />
           <IndexCard title='注销账户' onClick={this.deleteAccount} />

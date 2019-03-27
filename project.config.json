@@ -28,7 +28,7 @@
 			"list": []
 		},
 		"miniprogram": {
-			"current": 3,
+			"current": 4,
 			"list": [
 				{
 					"id": 0,
@@ -54,8 +54,14 @@
 				{
 					"id": 3,
 					"name": "face_decetion",
-					"pathName": "pages/face_decetion/index",
+					"pathName": "pages/fd/index",
 					"query": "",
+					"scene": null
+				},
+				{
+					"id": -1,
+					"name": "fr",
+					"pathName": "pages/fr/index",
 					"scene": null
 				}
 			]
