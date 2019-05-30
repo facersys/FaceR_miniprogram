@@ -20,6 +20,8 @@ export default class Index extends Component {
     }
 
     this.deleteAccount = this.deleteAccount.bind(this)
+    this.toFD = this.toFD.bind(this)
+    this.toFR = this.toFR.bind(this)
   }
 
   config: Config = {
