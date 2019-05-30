@@ -6,7 +6,7 @@ import { getUserInfo } from '../../global'
 import './index.less'
 
 import BigImg from '../../components/big_img'
-import BottomNavbar from '../../components/navbar'
+import BottomNavbar from '../../common/components/bottomNavbar'
 
 export default class Login extends Component {
   config: Config = {

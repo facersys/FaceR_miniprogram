@@ -11,6 +11,8 @@
 		"newFeature": true
 	},
 	"compileType": "miniprogram",
+	"simulatorType": "wechat",
+	"simulatorPluginLibVersion": {},
 	"condition": {
 		"search": {
 			"current": -1,
@@ -28,7 +30,7 @@
 			"list": []
 		},
 		"miniprogram": {
-			"current": 3,
+			"current": 6,
 			"list": [
 				{
 					"id": 0,
@@ -53,9 +55,30 @@
 				},
 				{
 					"id": 3,
-					"name": "face_decetion",
+					"name": "人脸检测",
 					"pathName": "pages/face_decetion/index",
 					"query": "",
+					"scene": null
+				},
+				{
+					"id": -1,
+					"name": "个人信息",
+					"pathName": "pages/user_detail/index",
+					"query": "",
+					"scene": null
+				},
+				{
+					"id": -1,
+					"name": "通知列表",
+					"pathName": "pages/notice/index",
+					"query": "",
+					"scene": null
+				},
+				{
+					"id": 6,
+					"name": "通知详细",
+					"pathName": "pages/notice_detail/index",
+					"query": "nid=1",
 					"scene": null
 				}
 			]

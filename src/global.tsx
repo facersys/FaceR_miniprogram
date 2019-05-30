@@ -15,7 +15,7 @@ export function get(key) {
 
 // 获取用户信息
 export function getUserInfo() {
-  
+
   return new Promise((resolve, reject) => {
     Taro.getStorage({ key: 'userId' }).then(res => {
       const openid = res.data
@@ -29,7 +29,7 @@ export function getUserInfo() {
       })
 
     }).catch(() => {
-      Taro.navigateTo({ 
+      Taro.navigateTo({
         url: '/pages/login/index'
       })
     })
@@ -41,3 +41,5 @@ export function getGenderStr(gender) {
   var g = parseInt(gender)
   return g === 0 ? '保密' : g === 1 ? '男' : '女'
 }
+
+

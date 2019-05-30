@@ -4,10 +4,11 @@ import { AtIcon } from 'taro-ui'
 
 import './index.less'
 import { get as getGlobalData } from '../../global'
+import { API_URL } from '../../config';
 
 export default class ImgPicker extends Component {
 
-  static defaultProps = {user: {}}
+  static defaultProps = { user: {} }
 
   constructor(props) {
     super(props)
@@ -21,53 +22,45 @@ export default class ImgPicker extends Component {
   }
 
   handleImgPicker = () => {
-    var self = this
-    
-    new Promise(() => {
-      Taro.chooseImage({
-        count: 1,
-        sizeType: ['original'],
-        sourceType: ['album', 'camera'],
-        success(res) {
-          // 开始上传
-          Taro.showLoading({
-            title: '正在上传...'
+    Taro.chooseImage({
+      count: 1,
+      sizeType: ['original'],
+      sourceType: ['album', 'camera']
+    }).then(res => {
+      Taro.showLoading({
+        title: '正在上传...'
+      })
+      const tempFilePaths = res.tempFilePaths
+      const uid = Taro.getStorageSync('uid')
+      Taro.uploadFile({
+        url: API_URL + '/updateFace',
+        filePath: tempFilePaths[0],
+        name: 'face',
+        formData: {
+          uid: uid
+        }
+      }).then(res => {
+        Taro.hideLoading()
+        Taro.showLoading({
+          title: '正在处理图像信息...'
+        })
+        console.log(res)
+        const result = JSON.parse(res.data)
+        if (result.code !== 0) {
+          Taro.showToast({
+            title: result.message,
+            icon: 'none'
           })
-
-          const tempFilePaths = res.tempFilePaths
-          new Promise(() => {
-            Taro.uploadFile({
-              url: 'https://facer.yingjoy.cn/api/upload_face',
-              filePath: tempFilePaths[0],
-              name: 'face_img',
-              formData: {
-                oid: self.props.user.openid
-              },
-              success(res) {
-                Taro.hideLoading()
-                Taro.showLoading({
-                  title: '正在处理图像信息...'
-                })
-                var result = JSON.parse(res.data)
-                if (result.code !== 200) {
-                  Taro.showToast({
-                    title: result.message,
-                    icon: 'none'
-                  })
-                } else {
-                  // 上传成功
-                  Taro.showToast({
-                    title: result.message,
-                    icon: 'success'
-                  })
-                  console.log(result)
-                  var new_user = self.props.user
-                  new_user['face_url'] = result.data
-                  self.changeState({ user: new_user })
-                }
-              }
-            })
+        } else {
+          Taro.showToast({
+            title: result.message,
+            icon: 'success'
           })
+          var new_user = this.props.user
+          new_user.face_url = result.data.face_url
+          new_user.face = result.data.face
+          this.changeState({ user: new_user })
+          Taro.setStorageSync('user', new_user)
         }
       })
     })
@@ -83,7 +76,7 @@ export default class ImgPicker extends Component {
           {
             this.props.user.face_url ? (
               <Image
-                src={getGlobalData('OSS_URL') + this.props.user.face_url}
+                src={this.props.user.face_url}
                 className='face-img'
               />
             ) : (

@@ -9,7 +9,7 @@ export default class IndexSwiper extends Component {
 
     this.state = {
       swiperUrls: [
-        "https://facer.yingjoy.cn/static/banner.png"
+        "https://facer.yingjoy.cn/static/banner.png",
       ]
     }
   }
@@ -18,14 +18,11 @@ export default class IndexSwiper extends Component {
     return (
       <Swiper
         className='index-swiper'
-        indicatorColor='#999'
-        indicatorActiveColor='#333'
         circular
-        indicatorDots
         autoplay>
         {
           this.state.swiperUrls.map((item, index) => (
-            <SwiperItem key={index}>
+            <SwiperItem key={index} >
               <Image src={item} className='swiper-image' />
             </SwiperItem>
           ))

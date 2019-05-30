@@ -1,7 +1,7 @@
 import Taro, { Component } from '@tarojs/taro'
 import { AtTabBar } from 'taro-ui'
 
-import { set as setGlobalData, get as getGlobalData } from '../../global'
+import { set as setGlobalData, get as getGlobalData } from '../../../global'
 
 export default class BottomNavbar extends Component {
 
@@ -43,7 +43,7 @@ export default class BottomNavbar extends Component {
         { title: '个人中心', iconType: 'user' },
       ]}
         onClick={this.handleClick}
-        current={getGlobalData('navbar_current')}
+        current={Taro.getStorageSync('navbar_current')}
       />
     )
   }

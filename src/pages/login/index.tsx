@@ -1,12 +1,20 @@
 import Taro, { Component, Config } from '@tarojs/taro'
 import { View, Text } from '@tarojs/components'
-import { AtButton } from 'taro-ui'
+import { AtButton, AtToast } from 'taro-ui'
+import { API_URL } from '../../config'
+import './index.sass'
+import BottomNavbar from '../../common/components/bottomNavbar'
 
-import './index.less'
+interface IMyComponentState {
+  btnDisabled: boolean,
+  showToast: boolean,
+  toastIcon: any,
+  toastContent: string,
+  toastDuration: number
+}
 
-import BottomNavbar from '../../components/navbar'
 
-export default class Login extends Component {
+export default class Login extends Component<{}, IMyComponentState> {
   config: Config = {
     navigationBarTitleText: '登陆'
   }
@@ -14,130 +22,151 @@ export default class Login extends Component {
   constructor(props) {
     super(props)
 
+    this.state = {
+      showToast: false,
+      toastIcon: 'success',
+      toastContent: '删除成功',
+      toastDuration: 3000,
+      btnDisabled: true
+    }
+
+
     this.getUserInfo = this.getUserInfo.bind(this)
-    this.userExists = this.userExists.bind(this)
-    this.saveUserToMongo = this.saveUserToMongo.bind(this)
+    this.isUserExists = this.isUserExists.bind(this)
   }
 
-  // 用户直接退出页面
-  componentWillUnmount() {
-    Taro.getStorage({ key: 'userId' }).catch(() => {
-      Taro.navigateTo({
-        url: '/pages/login/index'
-      })
-    })
-  }
-
-  userExists = (openid) => {
+  // 判断用户是否存在
+  isUserExists(openId) {
     return new Promise((resolve, reject) => {
       Taro.request({
-        url: 'https://facer.yingjoy.cn/api/user',
-        data: { oid: openid },
-        success(res) {
-          resolve(res.data.code === 200 ? true : false)
-        }
-      })
-    })
-  }
-
-  saveUserToMongo = (userinfo) => {
-    return new Promise((resolve, reject) => {
-      Taro.request({
-        url: 'https://facer.yingjoy.cn/api/user',
+        url: API_URL + '/findUserByOpenID',
         method: 'POST',
-        data: userinfo,
-        success(res) {
-          Taro.setStorage({ key: 'userId', data: userinfo.openid }).then(res => {
-            Taro.navigateTo({
-              url: "/" + Taro.getCurrentPages()[0].route
-            })
-          })
+        data: {
+          'openid': openId
         }
+      }).then(res => {
+        resolve(res.data.data)
       })
     })
   }
 
-  getUserInfo = (userinfo) => {
-    var self = this
+  componentWillMount() {
+    // 如果存在用户直接返回上一层
+    const uid = Taro.getStorageSync('uid')
+    if (Boolean(uid)) {
+      Taro.navigateBack()
+    } else {
+      Taro.login().then(res => {
+        Taro.request({
+          url: API_URL + '/wx/code2session/' + res.code,
+        }).then((res) => {
+          const openid = res.data.data.openid
+          const session_key = res.data.data.session_key
 
-    return new Promise((resolve, reject) => {
-      if (userinfo.detail.userInfo) {
-        Taro.login().then((res) => {
+          Taro.setStorageSync('openid', openid)
+          Taro.setStorageSync('session_key', session_key)
+        }).then(() => {
+          this.setState({
+            btnDisabled: false
+          })
+        })
+      })
+    }
+  }
+
+  componentDidShow() {
+    const uid = Taro.getStorageSync('uid')
+    if (Boolean(uid)) {
+      Taro.navigateBack()
+    }
+  }
+
+  // 获取用户信息
+  getUserInfo = (userInfo) => {
+    this.setState({
+      showToast: true,
+      toastContent: '登陆中，请稍后...',
+      toastIcon: 'loading',
+      toastDuration: 0
+    })
+
+    const openid = Taro.getStorageSync('openid')
+    const session_key = Taro.getStorageSync('session_key')
+
+    // 判断用户是否存在
+    this.isUserExists(openid).then(res => {
+      if (res != 0) {
+        // 用户存在，拿到用户的uid，并存储用户信息
+        Taro.setStorageSync('uid', res)
+      } else {
+        // 用户不存在，创建新用户
+        Taro.request({
+          url: API_URL + '/wx/decrypt',
+          method: 'POST',
+          data: {
+            'session_key': session_key,
+            'encryptedData': userInfo.detail.encryptedData,
+            'iv': userInfo.detail.iv
+          }
+        }).then(res => {
+          // 拿到了用户数据
+          const userinfo_detail = res.data.data
+          const data = {
+            city: userinfo_detail.city,
+            province: userinfo_detail.province,
+            avatar: userinfo_detail.avatarUrl,
+            gender: userinfo_detail.gender,
+            name: userinfo_detail.nickName,
+            openid: userinfo_detail.openId,
+            unionid: userinfo_detail.unionId
+          }
+
           Taro.request({
-            url: 'https://facer.yingjoy.cn/api/wx/code2session/' + res.code,
-            success(res) {
-              const openid = res.data.data.openid
-              const session_key = res.data.data.session_key
-              Taro.showLoading({
-                title: '登陆中...'
-              })
-              // 直接判断用户是否存在数据库
-              self.userExists(openid).then((res) => {
-                if (res) {
-                  console.log('用户已存在')
-                  Taro.setStorage({ key: 'userId', data: openid }).then(res => {
-                    Taro.navigateTo({
-                      url: "/" + Taro.getCurrentPages()[0].route
-                    })
-                  })
-                } else {
-                  // 保存用户到数据库
-                  console.log('保存用户')
-                  new Promise((resolve, reject) => {
-                    Taro.request({
-                      url: 'https://facer.yingjoy.cn/api/wx/decrypt',
-                      method: 'POST',
-                      data: {
-                        'session_key': session_key,
-                        'encryptedData': userinfo.detail.encryptedData,
-                        'iv': userinfo.detail.iv
-                      },
-                      success(res) {
-                        console.log(res)
-
-                        if (res.statusCode === 500) {
-                          // 解密失败，重新解密
-                          Taro.showToast({
-                            title: '请重试'
-                          })
-                        } else {
-                          const userinfo_detail = res.data.data
-                          self.saveUserToMongo({
-                            city: userinfo_detail.city,
-                            province: userinfo_detail.province,
-                            avatar: userinfo_detail.avatarUrl,
-                            gender: userinfo_detail.gender,
-                            name: userinfo_detail.nickName,
-                            openid: userinfo_detail.openId,
-                            unionid: userinfo_detail.unionId
-                          })
-                        }
-                      }
-                    })
-                  })
-                }
-              })
+            url: API_URL + '/user',
+            method: 'POST',
+            data: data
+          }).then(res => {
+            if (res.data.code === 0) {
+              // 拿到用户的uid
+              Taro.setStorageSync('uid', res.data.data)
             }
           })
         })
-      } else { }
+      }
+    }).then(() => {
+      this.setState({
+        showToast: true,
+        toastContent: '登陆成功',
+        toastIcon: 'success',
+        toastDuration: 1000
+      })
+      Taro.navigateBack()
     })
   }
+
 
   render() {
     return (
       <View className='collect'>
+        <AtToast
+          isOpened={this.state.showToast}
+          text={this.state.toastContent}
+          status={this.state.toastIcon}
+          duration={this.state.toastDuration}
+          onClose={() => { this.setState({ showToast: false }) }}
+        ></AtToast>
+
         <View className='login-view'>
           <View className='button-group'>
             <AtButton
               type='primary'
               className='login-btn'
               openType='getUserInfo'
+              disabled={this.state.btnDisabled}
               onGetUserInfo={this.getUserInfo}
             >微信登陆</AtButton>
-            {/* <AtButton type='secondary' className='login-btn'>学号登陆</AtButton> */}
           </View>
-          <Text className='login-notice'>注: 登陆后可以在信息采集中绑定教务系统</Text>
+          <Text className='login-notice'>注: 登陆后可以绑定教务系统</Text>
         </View>
         <BottomNavbar />
       </View>
